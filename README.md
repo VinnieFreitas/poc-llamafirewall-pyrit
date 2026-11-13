@@ -147,24 +147,37 @@ Four profiles set the VM size, model, scanner thresholds and topology.
 
 ## Quickstart (home-lab profile)
 
+The proxy runs **on the Azure VM**; PyRIT runs on your laptop and reaches the
+proxy through an SSH tunnel. Set your SSH public key and (for preprod/prod) your
+model endpoint in `infra/main.bicepparam` before deploying.
+
 ```bash
-# 1. Deploy the Azure VM
+# 1. Deploy the Azure VM (from the repo root)
 cd infra
-./deploy.sh                       # select the home-lab profile when prompted
+./deploy.sh                        # choose the home-lab profile when prompted
 
-# 2. Bootstrap the proxy on the VM
-scp setup_vm.sh ../firewall/proxy.py azureuser@your-vm.eastus.cloudapp.azure.com:~/
-ssh azureuser@your-vm.eastus.cloudapp.azure.com \
-    'bash ~/setup_vm.sh --profile lab 2>&1 | tee ~/setup.log'
+# Get the VM's address from the deploy output, or query it:
+az network public-ip list -g rg-llamapoc \
+  --query "[].{ip:ipAddress, fqdn:dnsSettings.fqdn}" -o table
+VM=azureuser@<fqdn-or-ip>
 
-# 3. Run the red-team suite
+# 2. Bootstrap the proxy ON THE VM — copy the files up, then run the script there.
+#    (setup_vm.sh installs Ollama, pulls the models and creates a service owned
+#     by the VM's azureuser; do NOT run it on your laptop.)
+scp setup_vm.sh ../firewall/proxy.py ../redteam/social_engineering_pt.nov "$VM":~/
+ssh "$VM" 'bash ~/setup_vm.sh --profile lab 2>&1 | tee ~/setup.log'
+
+# 3. Open an SSH tunnel to the proxy (leave running in its own terminal)
+ssh -N -L 8080:localhost:8080 "$VM"
+
+# 4. In a second terminal, run the red-team suite from your laptop
 cd ../redteam
 ./setup_pyrit.sh
 python pyrit_redteam.py --endpoint http://localhost:8080 --prompts-file custom_attacks.yaml
-```
 
-Replace `your-vm.eastus.cloudapp.azure.com` with your VM's FQDN and set your
-model endpoint in the Bicep parameters before deploying.
+# 5. Tear down when finished — the VM bills while it runs
+cd ../infra && ./teardown.sh
+```
 
 ---
 

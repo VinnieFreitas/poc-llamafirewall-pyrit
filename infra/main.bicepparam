@@ -11,7 +11,7 @@ using './main.bicep'
 // Paste the contents of ~/.ssh/id_ed25519.pub here.
 // Check first: ls ~/.ssh/id_ed25519.pub
 // If exists, use that key. If not: ssh-keygen -t ed25519 -C "llamapoc"
-param adminPublicKey = 'ssh-ed25519 AAAA_REPLACE_WITH_YOUR_PUBLIC_KEY your-comment'
+param adminPublicKey = '<insert ssh key here>'
 
 // --- Environment profile ------------------------------------------------------
 //
@@ -31,7 +31,7 @@ param profile = 'lab'
 
 // --- Optional overrides -------------------------------------------------------
 
-param prefix   = 'llamapoc'
+param prefix = '<define a dns param>'
 
 // eastus  = cheapest
 // eastus2 = paired with East US, good redundancy
