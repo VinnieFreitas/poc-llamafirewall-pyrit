@@ -1,0 +1,46 @@
+// =============================================================================
+//  LlamaFirewall / PyRIT — Parameters
+//  Fill in adminPublicKey before deploying.
+//  Set profile to match your target environment.
+// =============================================================================
+
+using './main.bicep'
+
+// --- Required -----------------------------------------------------------------
+
+// Paste the contents of ~/.ssh/id_ed25519.pub here.
+// Check first: ls ~/.ssh/id_ed25519.pub
+// If exists, use that key. If not: ssh-keygen -t ed25519 -C "llamapoc"
+param adminPublicKey = 'ssh-ed25519 AAAA_REPLACE_WITH_YOUR_PUBLIC_KEY your-comment'
+
+// --- Environment profile ------------------------------------------------------
+//
+//  lab        → Standard_B8ms          single VM  / laptop PyRIT  / SSH tunnel
+//  preprod    → Standard_D8s_v3        single VM  / laptop PyRIT  / SSH tunnel
+//  production → Standard_D16s_v3       single VM  / laptop PyRIT  / SSH tunnel
+//  corp-lab   → NC4as_T4_v3 + B2ms     two VMs    / PyRIT VM      / BeyondTrust
+//               ⚠️ Requires NC-series quota approval in sandbox subscription
+//
+param profile = 'lab'
+
+// --- corp profiles -----------------------------------------------------------
+//
+// Azure Bastion Developer SKU is used for SSH access to all corp profile VMs.
+// Deployed automatically by main.bicep — no additional parameters needed.
+// Access: Portal → <VM> → Connect → Bastion
+
+// --- Optional overrides -------------------------------------------------------
+
+param prefix   = 'llamapoc'
+
+// eastus  = cheapest
+// eastus2 = paired with East US, good redundancy
+// brazilsouth = lowest latency from São Paulo
+param location = 'eastus'
+
+// Auto-shutdown in UTC (lab, preprod, corp-lab only)
+// São Paulo is UTC-3 (BRT) — "2300" UTC = 20:00 BRT
+param autoShutdownTime = '2300'
+
+param adminUsername = 'azureuser'
+param osDiskSizeGB  = 64
